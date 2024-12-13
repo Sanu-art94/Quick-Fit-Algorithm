@@ -1,0 +1,103 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+#define MAX_BLOCKS 5
+#define MAX_PROCESSES 5
+
+// Structure to represent a memory block
+typedef struct {
+    int size;
+    bool is_free; // true if the block is free, false if allocated
+} MemoryBlock;
+
+// Structure to represent a process
+typedef struct {
+    int size;
+    bool is_allocated; // true if the process has been allocated memory
+} Process;
+
+// Function to perform Best Fit allocation
+int bestFit(MemoryBlock blocks[], int num_blocks, Process p) {
+    int index = -1;
+    int min_diff = 99999; // Set to a large number initially
+    
+    // Find the block that best fits the process
+    for (int i = 0; i < num_blocks; i++) {
+        if (blocks[i].is_free && blocks[i].size >= p.size) {
+            int diff = blocks[i].size - p.size;
+            if (diff < min_diff) {
+                min_diff = diff;
+                index = i;
+            }
+        }
+    }
+    
+    return index;
+}
+
+// Function to allocate memory to a process using Best Fit
+void allocateMemory(MemoryBlock blocks[], int num_blocks, Process *p) {
+    int block_index = bestFit(blocks, num_blocks, *p);
+    
+    if (block_index != -1) {
+        blocks[block_index].is_free = false;
+        p->is_allocated = true;
+        printf("Process of size %d allocated to block of size %d.\n", p->size, blocks[block_index].size);
+    } else {
+        printf("Unable to allocate process of size %d. Not enough memory.\n", p->size);
+    }
+}
+
+// Function to release memory of a process
+void releaseMemory(MemoryBlock blocks[], int num_blocks, Process *p) {
+    for (int i = 0; i < num_blocks; i++) {
+        if (!blocks[i].is_free && p->size <= blocks[i].size) {
+            blocks[i].is_free = true;
+            p->is_allocated = false;
+            printf("Memory released for process of size %d.\n", p->size);
+            return;
+        }
+    }
+}
+
+// Function to display memory blocks
+void displayMemory(MemoryBlock blocks[], int num_blocks) {
+    for (int i = 0; i < num_blocks; i++) {
+        printf("Block of size %d: %s\n", blocks[i].size, blocks[i].is_free ? "Free" : "Allocated");
+    }
+}
+
+int main() {
+    // Initialize memory blocks
+    MemoryBlock blocks[MAX_BLOCKS] = {
+        {100, true}, {500, true}, {200, true}, {300, true}, {600, true}
+    };
+    
+    // Initialize processes
+    Process processes[MAX_PROCESSES] = {
+        {150, false}, {80, false}, {350, false}, {200, false}, {100, false}
+    };
+    
+    // Display initial state of memory
+    printf("Initial memory state:\n");
+    displayMemory(blocks, MAX_BLOCKS);
+    
+    // Allocate memory for each process using Best Fit
+    for (int i = 0; i < MAX_PROCESSES; i++) {
+        allocateMemory(blocks, MAX_BLOCKS, &processes[i]);
+    }
+    
+    // Display memory state after allocation
+    printf("\nMemory state after allocation:\n");
+    displayMemory(blocks, MAX_BLOCKS);
+    
+    // Release memory of a process
+    printf("\nReleasing memory for process of size 150:\n");
+    releaseMemory(blocks, MAX_BLOCKS, &processes[0]);
+    
+    // Display memory state after release
+    printf("\nMemory state after release:\n");
+    displayMemory(blocks, MAX_BLOCKS);
+    
+    return 0;
+}
